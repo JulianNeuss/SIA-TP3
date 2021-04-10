@@ -1,3 +1,12 @@
+import pandas as pd
+import numpy as np
+from sklearn.model_selection import train_test_split
+from sklearn.datasets import make_blobs
+import matplotlib.pyplot as plt
+from sklearn import datasets
+from sklearn import svm
+from sklearn import metrics
+
 def Train_Perceptron(alfa, X_train, Y_train):
     
     '''Treina a rede perceptron dado um coeficiente de aprendizagem alfa 
