@@ -95,7 +95,7 @@ if __name__ == "__main__":
     X_train, X_test, y_train, y_test = train_test_split(X_data, Clase_data, test_size = 0)
     factor_aprendizaje = 0.2
     epochs = 150
-    w0, w1, w2 = Entrenar_Perceptron(factor_aprendizaje, X_train, y_train, epochs)
+    #w0, w1, w2 = Entrenar_Perceptron(factor_aprendizaje, X_train, y_train, epochs)
 
     #-------------------------------------Problema 1-------------------------------------
     xi = [-1,+1,-1,+1]
