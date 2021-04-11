@@ -9,7 +9,7 @@ def Entrenar_Perceptron(factor_aprendizaje, X_train, Y_train, epochs):
     Retorna los parametros del hiperplano (w0, w1, w2) -> w0*x + w1*y + w2 = 0'''
     
     i = 0 
-    w = np.zeros((2, 1)) #w1, w2 (Problemas en 2D)
+    w = np.random.rand(2, 1) #w1, w2 (Problemas en 2D)
     b = 0
     error = 1
     error_min = 2*len(X_train)
