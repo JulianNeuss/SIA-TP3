@@ -1,45 +1,38 @@
+import matplotlib.pyplot as plt
+from sklearn.model_selection import train_test_split
 import pandas as pd
 import numpy as np
-from sklearn.model_selection import train_test_split
-from sklearn.datasets import make_blobs
-import matplotlib.pyplot as plt
-from sklearn import datasets
-from sklearn import svm
-from sklearn import metrics
 
-def Train_Perceptron(alfa, X_train, Y_train):
+def Entrenar_Perceptron(factor_aprendizaje, X_train, Y_train, epochs):
+
+    ''' Algoritmo perceptron simple (diapositiva 40/60)
+    Retorna los parametros del hiperplano (w0, w1, w2) -> w0*x + w1*y + w2 = 0'''
     
-    '''Treina a rede perceptron dado um coeficiente de aprendizagem alfa 
-    e o conjunto de treinamento X_train.
-    Retorna: Parâmetros do hiperplano (w0, w1, w2) -> w0*x + w1*y + w2 = 0'''
-    
-    i = 0 #iteraciones
-    w = np.zeros((2, 1)) #w1, w2
+    i = 0 
+    w = np.zeros((2, 1)) #w1, w2 (Problemas en 2D)
     b = 0
     error = 1
     error_min = 2*len(X_train)
-    COTA = 500
     
-    #A cota é para o caso em que o conjunto não seja linearmente separável
-    while error > 0 and i < COTA:
+    while error > 0 and i < epochs:
         
-        i_x = X_train.sample() #sacar 1 elemento aleatório del conjunto de entrenamiento.
+        i_x = X_train.sample() #saco 1 elemento aleatório del conjunto de entrenamiento.
         x = np.array([ i_x['xi'], i_x['yi'] ]) #(xi, yi)
         index = int(i_x.index.values)
-        ClasseVerdadeira = Y_train[index]
+        ClaseReal = Y_train[index]
         
         exitacion = np.dot(x.T, w) + b
-        activacao = 1 if exitacion >= 0 else -1
+        activacao = 1 if exitacion >= 0 else -1 #Funcion Escalon
         
-        err = ClasseVerdadeira - activacao
-        delta_w = alfa*(err)*x
-        delta_b = alfa*(err)
-        
+        #Actualizacion de los pesos
+        err = ClaseReal - activacao
+        delta_w = factor_aprendizaje*(err)*x
+        delta_b = factor_aprendizaje*(err)
         w = w + delta_w
         b = b + delta_b
         
-        #O error é calculado sobre todo o conjunto de treinamento.
-        error = CalcularError(X_train, Y_train, w, b)
+        #Calculo del error sobre todo el conjunto de entrenamiento
+        error = CalcularErro(X_train, Y_train, w, b)
         if error < error_min:
             error_min = error
             w_min = w
@@ -49,61 +42,98 @@ def Train_Perceptron(alfa, X_train, Y_train):
     return w_min[0], w_min[1], b_min
 
 
-def CalcularError(X_train, Y_train, w, b):
-    
-    num_erro = 0
-    
+def CalcularErro(X_train, Y_train, w, b):
+    Ctd_erros = 0 #Cantidad de errores de clasificación con los parametros w y b.
     for index, row in X_train.iterrows():
-        
         x = np.array([row[0], row[1]]) #(xi, yi)
-        ClasseVerdadeira = Y_train[index]
-    
-        #ClasseVerdadeira = -1, 1
+        ClaseReal = Y_train[index] #Clase real
         exitacion = np.dot(x.T, w) + b
-        activacao = 1 if exitacion >= 0 else -1
-        error = ClasseVerdadeira - activacao
-        
+        activacao = 1 if exitacion >= 0 else -1  #clasificacao perceptron
+        error = ClaseReal - activacao
         if (error != 0):
-            num_erro += 1
-    
-    return num_erro
+            Ctd_erros += 1
+    return Ctd_erros
 
 
-w0_TP31, w1_TP31, w2_TP31 = Train_Perceptron(0.5, X1_train, y1_train) #Entreinamento Perceptron TP3-1
-w0_TP32, w1_TP32, w2_TP32 = Train_Perceptron(0.5, X2_train, y2_train) #Entreinamento Perceptron TP3-2
+def ReadFiles():
 
+    file1 = "TP3-ej2-Salida-deseada.txt"
+    file2 = "TP3-ej2-Conjuntoentrenamiento.txt"
+    salida        = open(file1, "r")
+    entrenamiento = open(file2, "r")
 
-def Classificacao_Perceptron(X_test, y_test, w, bias):
-    
-    N = X_test.shape[0]
-    Acertos = 0
-    Precision = 0
-    
-    for index, row in X_test.iterrows():
+    '''[xi|yi|zi|Salida]'''
+
+    xi = list()
+    yi = list()
+    zi = list()
+    Salida = list()
+
+    for line in salida:
+        Salida.append(float(line))
+
+    for line in entrenamiento:
+        numbers = line.split()
+        xi.append(float(numbers[0]))
+        yi.append(float(numbers[1]))
+        zi.append(float(numbers[2]))
+
+    data = pd.DataFrame({'xi':xi, 'yi':yi, 'zi':zi, 'Salida':Salida})
+    return data
+ 
         
-        x = np.array([row[0], row[1]]) #(xi, yi)
-        RealClase = y_test[index]
-        
-        #ClasseVerdadeira = -1, 1
-        exitacion = np.dot(x.T, w) - bias
-        activacao = 1 if exitacion >= 0 else -1
-        error = RealClase - activacao
-        
-        if(error == 0):
-            Acertos += 1
-            
-    return Acertos/N
 
 
+if __name__ == "__main__":
+    # Leer Archivo
 
-#Classificação Perceptron (TP31)
-w0 = [w0_TP31, w1_TP31]
-b = w2_TP31
-Precision_Percep_TP31 = Classificacao_Perceptron(X1_test, y1_test, w0, b)
-#print(Precision_Percep_TP31)
+    data = ReadFiles()
+    X_data = data.iloc[:,0:3]   # [xi, yi, zi]
+    Clase_data = data.iloc[:,3] # [clase real]
+    #Separacion entre conjunto de entrenamiento y testeo
+    test_size = 20 #Porcentaje de elementos en el conjunto de testeo
+    X_train, X_test, y_train, y_test = train_test_split(X_data, Clase_data, test_size = 0)
+    factor_aprendizaje = 0.2
+    epochs = 150
+    w0, w1, w2 = Entrenar_Perceptron(factor_aprendizaje, X_train, y_train, epochs)
 
-#Classificação Perceptron (TP32)
-w0 = [w0_TP32, w1_TP32]
-b = w2_TP32
-Precision_Percep_TP32 = Classificacao_Perceptron(X1_test, y1_test, w0, b)
-#print(Precision_Percep_TP32)
+    #-------------------------------------Problema 1-------------------------------------
+    xi = [-1,+1,-1,+1]
+    yi = [+1,-1,-1,+1]
+    Salida_AND = [-1,-1,-1,+1] 
+    Salida_XOR = [+1,+1,-1,-1]
+
+    set_AND = pd.DataFrame({'xi':xi, 'yi':yi, 'Salida':Salida_AND})
+    set_XOR = pd.DataFrame({'xi':xi, 'yi':yi, 'Salida':Salida_XOR})
+
+    X_AND = set_AND.iloc[:,0:2] # [xi, yi]
+    Clase_AND = set_AND.iloc[:,2]   # [clase real]
+
+    X_XOR = set_XOR.iloc[:,0:2]
+    Clase_XOR = set_XOR.iloc[:,2]
+
+    #Separacion entre conjunto de entrenamiento y testeo
+    test_size = 0 #Porcentaje de elementos en el conjunto de testeo
+    X_train, X_test, y_train, y_test = train_test_split(X_AND, Clase_AND, test_size = 0)
+
+    # Condiciones Iniciales
+    factor_aprendizaje = 0.5
+    epochs = 150
+    w0, w1, w2 = Entrenar_Perceptron(factor_aprendizaje, X_train, y_train, epochs)
+
+    #x.w0 + y.w1 + w2 = 0
+    #y.w1 = -w0.x - w2
+    #y    = -(w0/w1)x - (w2/w1) --> Recta en el R².
+    #m = -w0/w1; b = -w2/w1
+    m = -(w0/w1)
+    b = -(w2/w1)
+    x = np.linspace(-1.5, 1.5, 100) 
+    y_perceptron = m*x + b
+
+    fig, ax = plt.subplots()
+    plt.style.use('seaborn-whitegrid')
+    colorsAND = ['red','red','red','blue']
+    colorsXOR = ['blue','blue','red','red']
+    plt.scatter(xi, yi, c=colorsAND)
+    plt.plot(x, y_perceptron, color='green')
+    plt.show()
