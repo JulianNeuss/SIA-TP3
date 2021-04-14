@@ -127,41 +127,49 @@ def ReadFiles():
 if __name__ == "__main__":
 
     #--Leer Archivo
-    #data = ReadFiles()
+    data = ReadFiles()
+    data_normalizado = ((data - data.min()))/(data.max()-data.min())
+    X_data = data_normalizado.iloc[:,0:3]
+    Clase_data = data_normalizado.iloc[:,3]
     #X_data = data.iloc[:,0:3]   # [xi, yi, zi]
     #Clase_data = data.iloc[:,3] # [clase real o clase deseada]
     #--Separacion entre conjunto de entrenamiento y testeo
-    #X_train, X_test, y_train, y_test = train_test_split(X_data, Clase_data, test_size = 0.2)
-    #factor_aprendizaje = 0.0001
-    #epochs = 100
-    #w0, w1, w2, J = Entrenar_Perceptron_Lineal(factor_aprendizaje, X_train, y_train, epochs)
-    #print('Parametros del hiperplano')
-    #print('w0 : {0}'.format(w0))
-    #print('w1 : {0}'.format(w1))
-    #print('w2 : {0}'.format(w2))
-    #print('J : {0}'.format(J))
-
-
-    #-----------------------------------Exemplo Diapositivas----------------------------------------
-    xi = [1.1946, 0.8788, 1.1907, 1.4180, 0.2032, 2.7571, 4.7125, 3.9392, 1.2072, 3.4799, 0.4763]
-    yi = [3.8427, 1.6595, 1.6117, 3.8272, 1.9208, 1.0931, 2.8166, 1.1032, 0.8132, 1.9982, 0.1020]
-    Salida  = [1, 1, 1, 1, 1, -1, -1, -1, -1, -1, -1]
-    colores = ['red','red','red','red','red','blue','blue','blue','blue','blue','blue']
-    Data    = pd.DataFrame({'xi':xi, 'yi':yi, 'Salida':Salida})
-    X_data  = Data.iloc[:,0:2]
-    Clase_data = Data.iloc[:,2]
-    X_train, X_test, y_train, y_test = train_test_split(X_data, Clase_data, test_size=0)
-    factor_aprendizaje = 0.01
-    epochs = 150
-    W, error_min = Entrenar_Perceptron_Simple(factor_aprendizaje, X_train, y_train, epochs)
+    X_train, X_test, y_train, y_test = train_test_split(X_data, Clase_data, test_size = 0.2)
+    factor_aprendizaje = 0.001
+    epochs = 10
+    W, J = Entrenar_Perceptron_Lineal(factor_aprendizaje, X_train, y_train, epochs)
     w0 = W[0]
     w1 = W[1]
     w2 = W[2]
+    w3 = W[3]
     print('Parametros del hiperplano')
     print('w0 : {0}'.format(w0))
     print('w1 : {0}'.format(w1))
     print('w2 : {0}'.format(w2))
-    print('error : {0}'.format(error_min))
+    print('w3 : {0}'.format(w3))
+    print('J : {0}'.format(J))
+
+
+    #-----------------------------------Exemplo Diapositivas----------------------------------------
+    #xi = [1.1946, 0.8788, 1.1907, 1.4180, 0.2032, 2.7571, 4.7125, 3.9392, 1.2072, 3.4799, 0.4763]
+    #yi = [3.8427, 1.6595, 1.6117, 3.8272, 1.9208, 1.0931, 2.8166, 1.1032, 0.8132, 1.9982, 0.1020]
+    #Salida  = [1, 1, 1, 1, 1, -1, -1, -1, -1, -1, -1]
+    #colores = ['red','red','red','red','red','blue','blue','blue','blue','blue','blue']
+    #Data    = pd.DataFrame({'xi':xi, 'yi':yi, 'Salida':Salida})
+    #X_data  = Data.iloc[:,0:2]
+    #Clase_data = Data.iloc[:,2]
+    #X_train, X_test, y_train, y_test = train_test_split(X_data, Clase_data, test_size=0)
+    #factor_aprendizaje = 0.01
+    #epochs = 150
+    #W, error_min = Entrenar_Perceptron_Simple(factor_aprendizaje, X_train, y_train, epochs)
+    #w0 = W[0]
+    #w1 = W[1]
+    #w2 = W[2]
+    #print('Parametros del hiperplano')
+    #print('w0 : {0}'.format(w0))
+    #print('w1 : {0}'.format(w1))
+    #print('w2 : {0}'.format(w2))
+    #print('error : {0}'.format(error_min))
     #----------------------------------------------------------------------------------------------
 
 
@@ -203,14 +211,14 @@ if __name__ == "__main__":
     #--y.w1 = -w0.x - w2
     #--y    = -(w0/w1)x - (w2/w1) --> Recta en R².
     #--m = -w0/w1; b = -w2/w1
-    m = -(w0/w1)
-    b = -(w2/w1)
-    x = np.linspace(-5, 5, 100) 
-    y_perceptron = m*x + b
+    #m = -(w0/w1)
+    #b = -(w2/w1)
+    #x = np.linspace(-5, 5, 100) 
+    #y_perceptron = m*x + b
 
-    fig, ax = plt.subplots()
+    #fig, ax = plt.subplots()
     #colorsAND = ['red','red','red','blue']
     #colorsXOR = ['blue','blue','red','red']
-    plt.scatter(xi, yi, c=colores)
-    plt.plot(x, y_perceptron, color='green')
-    plt.show()
+    #plt.scatter(xi, yi, c=colores)
+    #plt.plot(x, y_perceptron, color='green')
+    #plt.show()
