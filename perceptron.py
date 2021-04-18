@@ -1,7 +1,9 @@
 import matplotlib.pyplot as plt
+from sklearn import preprocessing
 from sklearn.model_selection import train_test_split
 import pandas as pd
 import numpy as np
+import random
 
 
 def Entrenar_Perceptron_Simple(factor_aprendizaje, X_train, Y_train, epochs):
@@ -39,7 +41,6 @@ def Entrenar_Perceptron_Simple(factor_aprendizaje, X_train, Y_train, epochs):
 
     return w_min, error_min
 
-
 def ErrorSimple(X_train, Y_train, w):
     Ctd_erros = 0
     for index, row in X_train.iterrows():
@@ -56,13 +57,12 @@ def ErrorSimple(X_train, Y_train, w):
             Ctd_erros += 1
     return Ctd_erros
 
-
 def Entrenar_Perceptron_Lineal(factor_aprendizaje, X_train, Y_train, epochs):
     '''Algoritmo para entrenar el perceptron simple
         Retorna los parametros del hiperplano (w0, w1,..., w[n-1]) -> w0*x + w1*y + w2*z + ... + w[n-1] = 0'''
 
     i = 0
-    w_shape = X_train.shape[1]
+    w_shape = X_train.shape[1] #cantidad de columnas que tiene x_train
     w = np.zeros((w_shape + 1, 1))
     b = 0
     J = []
@@ -74,25 +74,26 @@ def Entrenar_Perceptron_Lineal(factor_aprendizaje, X_train, Y_train, epochs):
 
         for index, row in X_train.iterrows():
             # Para cada elemento do conjunto de treinamento
-            i_x = X_train.sample()  # saco 1 elemento aleatório del conjunto de entrenamiento.
+            i_x = np.array(row)# saco 1 elemento aleatório del conjunto de entrenamiento.
+            i_x = i_x.reshape(1, 3)
             x = np.zeros(w.shape)  # (xi, yi, zi,..., 1) (x : ksi_{i}^{u})
             x[-1] = 1
             x[:-1] = np.array(i_x.T)
             zeta_mu = float(Y_train[index])  # Salida deseada
             O_mu = float(np.dot(x.T, w))
-            # Actualizacion de los pesos (diapositiva 36/60)
             erro = zeta_mu - O_mu
-            errors += erro
+            # Actualizacion de los pesos (diapositiva 36/60)
+            delta = factor_aprendizaje * (erro) * x
+            w = w + delta
             error_for_cost += (erro ** 2)
 
-        delta = (factor_aprendizaje * errors) * x
-        w = w + delta
+        # delta = (factor_aprendizaje * errors) * x
+        # w = w + delta
         J.append(error_for_cost * 0.5)
 
         i += 1
 
     return w, J  # w = (w0, w1,..., w[n-1]) , donde w[n-1] es el umbral.
-
 
 def Entrenar_Perceptron_No_Lineal(factor_aprendizaje, X_train, Y_train, epochs):
     '''Algoritmo para entrenar el perceptron simple no lineal
@@ -101,7 +102,8 @@ def Entrenar_Perceptron_No_Lineal(factor_aprendizaje, X_train, Y_train, epochs):
 # ACA TENEMOS LA DUDA DE MODIFICAR EL i
     i = 0
     w_shape = X_train.shape[1]
-    w = np.zeros((w_shape + 1, 1))
+    w = np.random.uniform(low=-1, high=1, size=(w_shape+1, 1))  ######################### VER SI TIENE UMBRAL: SI NO TIENE => w_shape
+    # w = np.zeros((w_shape + 1, 1))
     b = 0
     J = []
 
@@ -112,23 +114,32 @@ def Entrenar_Perceptron_No_Lineal(factor_aprendizaje, X_train, Y_train, epochs):
 
         for index, row in X_train.iterrows():
             # Para cada elemento do conjunto de treinamento
-            i_x = X_train.sample()  # saco 1 elemento aleatório del conjunto de entrenamiento.
+            i_x = np.array(row)# saco 1 elemento aleatório del conjunto de entrenamiento.
+            i_x = i_x.reshape(1, 3)
             x = np.zeros(w.shape)  # (xi, yi, zi,..., 1) (x : ksi_{i}^{u})
             x[-1] = 1
             x[:-1] = np.array(i_x.T)
             zeta_mu = float(Y_train[index])  # Salida deseada
-            O_mu = np.tanh(float(np.dot(x.T, w)))
+            O_mu = np.tanh(0.5*float(np.dot(x.T, w)))
+            delta = factor_aprendizaje * (zeta_mu - O_mu) * 0.5 * (1-np.tanh(float(np.dot(x.T, w)))**2) * x
+            w = w + delta
+
             erro = zeta_mu - O_mu
             errors += erro
             error_for_cost += (erro ** 2)
+            error_for_cost = error_for_cost*0.5
 
-        delta = factor_aprendizaje * errors * (1-np.tanh(float(np.dot(x.T, w)))**2) * x
-        w = w + delta
-        J.append(error_for_cost * 0.5)
+
+        J.append(error_for_cost)
         i += 1
 
     return w, J  # w = (w0, w1,..., w[n-1]) , donde w[n-1] es el umbral.
 
+def Validar_perceptron(w_pesos, entrada_tests, salida_test ):
+    for index, row in entrada_tests.iterrows():
+        salida_perceptron = row[0]*w_pesos[0]+row[1]*w_pesos[1]+row[2]*w_pesos[2]+w_pesos[3]
+        salida_deseada = salida_test[index]
+        print( "salida_perceptron = " , salida_perceptron , "salida_deseada = " , salida_deseada , " error = " ,  salida_perceptron - salida_deseada)
 
 def ReadFiles():
     file1 = "TP3-ej2-Salida-deseada.txt"
@@ -159,25 +170,28 @@ def ReadFiles():
 if __name__ == "__main__":
     # --Leer Archivo
     data = ReadFiles()
-    data_normalizado = ((data - data.min())) / (data.max() - data.min())
+    max_abs_scaler = preprocessing.MaxAbsScaler()
+    data_normalizado = max_abs_scaler.fit_transform(data)
+    data_normalizado= pd.DataFrame(data_normalizado)
     X_data = data_normalizado.iloc[:, 0:3]
     Clase_data = data_normalizado.iloc[:, 3]
     # X_data = data.iloc[:,0:3]   # [xi, yi, zi]
     # Clase_data = data.iloc[:,3] # [clase real o clase deseada]
     # --Separacion entre conjunto de entrenamiento y testeo
-    X_train, X_test, y_train, y_test = train_test_split(X_data, Clase_data, test_size=0.2)
-    factor_aprendizaje = 0.001
-    epochs = 10
-    W, J = Entrenar_Perceptron_Lineal(factor_aprendizaje, X_train, y_train, epochs)
-    w0 = W[0]
-    w1 = W[1]
-    w2 = W[2]
-    w3 = W[3]
-    print('Parametros del hiperplano')
-    print('w0 : {0}'.format(w0))
-    print('w1 : {0}'.format(w1))
-    print('w2 : {0}'.format(w2))
-    print('w3 : {0}'.format(w3))
+    X_train, X_test, y_train, y_test = train_test_split(X_data, Clase_data, test_size=0.3)
+    factor_aprendizaje = 0.01
+    epochs = 100
+    W, J = Entrenar_Perceptron_No_Lineal(factor_aprendizaje, X_train, y_train, epochs)
+    Validar_perceptron(W, X_test, y_test)
+    # w0 = W[0]
+    # w1 = W[1]
+    # w2 = W[2]
+    # w3 = W[3]
+    # print('Parametros del hiperplano')
+    # print('w0 : {0}'.format(w0))
+    # print('w1 : {0}'.format(w1))
+    # print('w2 : {0}'.format(w2))
+    # print('w3 : {0}'.format(w3))
     print('J : {0}'.format(J))
 
     # -----------------------------------Exemplo Diapositivas----------------------------------------
