@@ -70,6 +70,7 @@ def Entrenar_Perceptron_Lineal(factor_aprendizaje, X_train, Y_train, epochs):
     while i < epochs:
 
         errors = 0
+        error_for_cost = 0
 
         for index, row in X_train.iterrows():
             # Para cada elemento do conjunto de treinamento
@@ -79,14 +80,14 @@ def Entrenar_Perceptron_Lineal(factor_aprendizaje, X_train, Y_train, epochs):
             x[:-1] = np.array(i_x.T)
             zeta_mu = float(Y_train[index])  # Salida deseada
             O_mu = float(np.dot(x.T, w))
-
             # Actualizacion de los pesos (diapositiva 36/60)
             erro = zeta_mu - O_mu
-            delta = (factor_aprendizaje * erro) * x
-            w = w + delta
-            errors += (erro ** 2)
+            errors += erro
+            error_for_cost += (erro ** 2)
 
-        J.append(errors)
+        delta = (factor_aprendizaje * errors) * x
+        w = w + delta
+        J.append(error_for_cost * 0.5)
 
         i += 1
 
@@ -107,6 +108,7 @@ def Entrenar_Perceptron_No_Lineal(factor_aprendizaje, X_train, Y_train, epochs):
     while i < epochs:
 
         errors = 0
+        error_for_cost = 0
 
         for index, row in X_train.iterrows():
             # Para cada elemento do conjunto de treinamento
@@ -115,17 +117,14 @@ def Entrenar_Perceptron_No_Lineal(factor_aprendizaje, X_train, Y_train, epochs):
             x[-1] = 1
             x[:-1] = np.array(i_x.T)
             zeta_mu = float(Y_train[index])  # Salida deseada
-            # ACTUALIZAMOS EL MU
             O_mu = np.tanh(float(np.dot(x.T, w)))
-
-            # Actualizacion de los pesos (diapositiva 36/60)
             erro = zeta_mu - O_mu
-            delta = (factor_aprendizaje * erro) * x
-            w = w + delta
-            errors += (erro ** 2)
+            errors += erro
+            error_for_cost += (erro ** 2)
 
-        J.append(errors)
-
+        delta = factor_aprendizaje * errors * (1-np.tanh(float(np.dot(x.T, w)))**2) * x
+        w = w + delta
+        J.append(error_for_cost * 0.5)
         i += 1
 
     return w, J  # w = (w0, w1,..., w[n-1]) , donde w[n-1] es el umbral.
