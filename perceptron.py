@@ -57,43 +57,55 @@ def ErrorSimple(X_train, Y_train, w):
             Ctd_erros += 1
     return Ctd_erros
 
+def ErrorLineal(X_train, Y_train, w):
+    errors = 0
+    for index, row in X_train.iterrows():
+        x = np.zeros((X_train.shape[1] + 1, 1))  # (xi, yi, zi,...., 1) (x : ksi_{i}^{u})
+        x[-1] = 1
+        rows = np.array([float(row[i]) for i in range(X_train.shape[1])])
+        rows = rows.reshape((X_train.shape[1], 1))
+        x[:-1] = rows
+        zeta_mu = Y_train[index]  # Salida deseada
+        O_mu = np.dot(x.T, w)
+        error = (zeta_mu - O_mu) ** 2
+        errors += error
+    return errors * 0.5
+
 def Entrenar_Perceptron_Lineal(factor_aprendizaje, X_train, Y_train, epochs):
-    '''Algoritmo para entrenar el perceptron simple
-        Retorna los parametros del hiperplano (w0, w1,..., w[n-1]) -> w0*x + w1*y + w2*z + ... + w[n-1] = 0'''
+    ''' Algoritmo perceptron simple (diapositiva 40/60)
+    Retorna los parametros del hiperplano (w0, w1,..., w[n-1]) -> w0*x + w1*y + w2*z + ... + w[n-1] = 0'''
 
     i = 0
-    w_shape = X_train.shape[1] #cantidad de columnas que tiene x_train
+    w_shape = X_train.shape[1]
     w = np.zeros((w_shape + 1, 1))
-    b = 0
-    J = []
+    error = 1
+    error_min = 2 * len(X_train) * 1000
+    w_min = w
 
-    while i < epochs:
+    while error > 0 and i < epochs:
 
-        errors = 0
-        error_for_cost = 0
+        i_x = X_train.sample()  # saco 1 elemento aleatório del conjunto de entrenamiento.
+        x = np.zeros(w.shape)  # (xi, yi, zi,..., 1) (x : ksi_{i}^{u})
+        x[-1] = 1
+        x[:-1] = np.array(i_x.T)
 
-        for index, row in X_train.iterrows():
-            # Para cada elemento do conjunto de treinamento
-            i_x = np.array(row)# saco 1 elemento aleatório del conjunto de entrenamiento.
-            i_x = i_x.reshape(1, 3)
-            x = np.zeros(w.shape)  # (xi, yi, zi,..., 1) (x : ksi_{i}^{u})
-            x[-1] = 1
-            x[:-1] = np.array(i_x.T)
-            zeta_mu = float(Y_train[index])  # Salida deseada
-            O_mu = float(np.dot(x.T, w))
-            erro = zeta_mu - O_mu
-            # Actualizacion de los pesos (diapositiva 36/60)
-            delta = factor_aprendizaje * (erro) * x
-            w = w + delta
-            error_for_cost += (erro ** 2)
+        index = int(i_x.index.values)
+        zeta_mu = float(Y_train[index])  # Salida deseada
+        O_mu = float(np.dot(x.T, w))  # Excitacion
+        activacao = O_mu
 
-        # delta = (factor_aprendizaje * errors) * x
-        # w = w + delta
-        J.append(error_for_cost * 0.5)
+        # Actualizacion de los pesos (diapositiva 36/60)
+        delta = (factor_aprendizaje) * (zeta_mu - activacao) * x
+        w = w + delta
 
+        # Calculo del error sobre todo el conjunto de entrenamiento
+        error = ErrorLineal(X_train, Y_train, w)
+        if error < error_min:
+            error_min = error
+            w_min = w
         i += 1
 
-    return w, J  # w = (w0, w1,..., w[n-1]) , donde w[n-1] es el umbral.
+    return w_min, error_min
 
 def Entrenar_Perceptron_No_Lineal(factor_aprendizaje, X_train, Y_train, epochs):
     '''Algoritmo para entrenar el perceptron simple no lineal
@@ -170,18 +182,23 @@ def ReadFiles():
 if __name__ == "__main__":
     # --Leer Archivo
     data = ReadFiles()
-    max_abs_scaler = preprocessing.MaxAbsScaler()
-    data_normalizado = max_abs_scaler.fit_transform(data)
-    data_normalizado= pd.DataFrame(data_normalizado)
-    X_data = data_normalizado.iloc[:, 0:3]
-    Clase_data = data_normalizado.iloc[:, 3]
-    # X_data = data.iloc[:,0:3]   # [xi, yi, zi]
-    # Clase_data = data.iloc[:,3] # [clase real o clase deseada]
+
+    # Normalizado
+    # max_abs_scaler = preprocessing.MaxAbsScaler()
+    # data_normalizado = max_abs_scaler.fit_transform(data)
+    # data_normalizado= pd.DataFrame(data_normalizado)
+    # X_data = data_normalizado.iloc[:, 0:3]
+    # Clase_data = data_normalizado.iloc[:, 3]
+
+    # No Normalizado
+    X_data = data.iloc[:,0:3]   # [xi, yi, zi]
+    Clase_data = data.iloc[:,3] # [clase real o clase deseada]
+
     # --Separacion entre conjunto de entrenamiento y testeo
     X_train, X_test, y_train, y_test = train_test_split(X_data, Clase_data, test_size=0.3)
     factor_aprendizaje = 0.01
-    epochs = 100
-    W, J = Entrenar_Perceptron_No_Lineal(factor_aprendizaje, X_train, y_train, epochs)
+    epochs = 7000
+    W, J = Entrenar_Perceptron_Lineal(factor_aprendizaje, X_train, y_train, epochs)
     Validar_perceptron(W, X_test, y_test)
     # w0 = W[0]
     # w1 = W[1]
@@ -264,3 +281,77 @@ if __name__ == "__main__":
     # plt.scatter(xi, yi, c=colores)
     # plt.plot(x, y_perceptron, color='green')
     # plt.show()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# def Entrenar_Perceptron_Lineal(factor_aprendizaje, X_train, Y_train, epochs):
+#     '''Algoritmo para entrenar el perceptron simple
+#         Retorna los parametros del hiperplano (w0, w1,..., w[n-1]) -> w0*x + w1*y + w2*z + ... + w[n-1] = 0'''
+#
+#     i = 0
+#     w_shape = X_train.shape[1] #cantidad de columnas que tiene x_train
+#     w = np.zeros((w_shape + 1, 1))
+#     b = 0
+#     J = []
+#     error_min = len(X_train) * 2
+#     error = 1
+#
+#     while error > 0 and i < epochs:
+#
+#         errors = 0
+#         error_for_cost = 0
+#
+#         for index, row in X_train.iterrows():
+#             # Para cada elemento do conjunto de treinamento
+#             i_x = np.array(row)# saco 1 elemento aleatório del conjunto de entrenamiento.
+#             i_x = i_x.reshape(1, 3)
+#             x = np.zeros(w.shape)  # (xi, yi, zi,..., 1) (x : ksi_{i}^{u})
+#             x[-1] = 1
+#             x[:-1] = np.array(i_x.T)
+#             zeta_mu = float(Y_train[index])  # Salida deseada
+#             O_mu = float(np.dot(x.T, w))
+#             erro = zeta_mu - O_mu
+#             # Actualizacion de los pesos (diapositiva 36/60)
+#             delta = factor_aprendizaje * (erro) * x
+#             w = w + delta
+#             error_for_cost += (erro ** 2)
+#
+#         # delta = (factor_aprendizaje * errors) * x
+#         # w = w + delta
+#         J.append(error_for_cost * 0.5)
+#
+#         i += 1
+#
+#     return w, J  # w = (w0, w1,..., w[n-1]) , donde w[n-1] es el umbral.
